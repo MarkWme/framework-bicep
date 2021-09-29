@@ -19,7 +19,7 @@ param nodeCount int = 3
 param nodeSKU string = 'Standard_D2_v3'
 
 @description('Kubernetes version')
-param kubernetesVersion string = '1.20.5'
+param kubernetesVersion string = '1.21.2'
 
 @description('Number to use for the second octet of the virtual network - 10.x.0.0/16 - This value will replace the x')
 param virtualNetworkNumber int = 100
@@ -34,7 +34,7 @@ var aksSubnetPrefix = '10.${virtualNetworkNumber}.1.0/24'
 var aksSubnetId = '${aks_vnet.id}/subnets/${aksSubnetName}'
 var agicSubnetName = '${name}-agic-subnet'
 var agicSubnetPrefix = '10.${virtualNetworkNumber}.2.0/24'
-var agicSubnetId = '${aks_vnet.id}/subnets/${agicSubnetName}'
+//var agicSubnetId = '${aks_vnet.id}/subnets/${agicSubnetName}'
 var aksIdentityName = '${name}-identity'
 var aksIdentityId = '${aks_identity.id}'
 
@@ -52,6 +52,8 @@ resource aks_identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-
 // Create an Azure virtual network
 //
 
+
+
 resource aks_vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   name: virtualNetworkName
   location: location
@@ -61,22 +63,24 @@ resource aks_vnet 'Microsoft.Network/virtualNetworks@2021-02-01' = {
         addressPrefix
       ]
     }
-    subnets: [
-      {
-        name: aksSubnetName
-        properties: {
-          addressPrefix: aksSubnetPrefix
-        }
-      }
-      {
-        name: agicSubnetName
-        properties: {
-          addressPrefix: agicSubnetPrefix
-        }
-      }
-    ]
+  }
+
+  resource aksSubnet 'subnets@2021-02-01' = {
+    name: aksSubnetName
+    properties: {
+      addressPrefix: aksSubnetPrefix
+    }
+  }
+
+  resource agicSubnet 'subnets@2021-02-01' = {
+    name: agicSubnetName
+    properties: {
+      addressPrefix: agicSubnetPrefix
+    }
   }
 }
+
+//output agicSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets',aks_vnet.name, agicSubnetName)
 
 resource aks_cluster 'Microsoft.ContainerService/managedClusters@2021-03-01'=  {
   name: name
@@ -114,7 +118,7 @@ resource aks_cluster 'Microsoft.ContainerService/managedClusters@2021-03-01'=  {
       ingressApplicationGateway: {
         enabled: true
         config: {
-          subnetId: agicSubnetId
+          subnetId: aks_vnet::agicSubnet.id
         }
       }
     }
