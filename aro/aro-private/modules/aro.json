@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.6.18.56646",
+      "templateHash": "10398947123518704702"
+    }
+  },
+  "parameters": {
+    "name": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "controlPlaneSubnetId": {
+      "type": "string"
+    },
+    "nodeSubnetId": {
+      "type": "string"
+    },
+    "clientId": {
+      "type": "string"
+    },
+    "clientSecret": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "controlPlaneVmSize": {
+      "type": "string"
+    },
+    "nodeVmSize": {
+      "type": "string"
+    },
+    "nodeVmDiskSize": {
+      "type": "int"
+    },
+    "nodeCount": {
+      "type": "int"
+    },
+    "pullSecret": {
+      "type": "string"
+    },
+    "apiServerVisibility": {
+      "type": "string"
+    },
+    "ingressVisibility": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.RedHatOpenShift/openShiftClusters",
+      "apiVersion": "2020-04-30",
+      "name": "[parameters('name')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "clusterProfile": {
+          "domain": "[parameters('domain')]",
+          "resourceGroupId": "[format('/subscriptions/{0}/resourceGroups/aro-{1}-{2}', subscription().subscriptionId, parameters('domain'), parameters('location'))]",
+          "pullSecret": "[parameters('pullSecret')]"
+        },
+        "servicePrincipalProfile": {
+          "clientId": "[parameters('clientId')]",
+          "clientSecret": "[parameters('clientSecret')]"
+        },
+        "masterProfile": {
+          "vmSize": "[parameters('controlPlaneVmSize')]",
+          "subnetId": "[parameters('controlPlaneSubnetId')]"
+        },
+        "workerProfiles": [
+          {
+            "name": "node",
+            "vmSize": "[parameters('nodeVmSize')]",
+            "diskSizeGB": "[parameters('nodeVmDiskSize')]",
+            "subnetId": "[parameters('nodeSubnetId')]",
+            "count": "[parameters('nodeCount')]"
+          }
+        ],
+        "apiserverProfile": {
+          "visibility": "[parameters('apiServerVisibility')]"
+        },
+        "ingressProfiles": [
+          {
+            "name": "default",
+            "visibility": "[parameters('ingressVisibility')]"
+          }
+        ]
+      }
+    }
+  ]
+}
